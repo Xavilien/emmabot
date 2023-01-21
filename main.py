@@ -42,7 +42,7 @@ def log(update, command):
     message = f"@{username} ({userid}) ran {command}"
     logs.append(message + "\n")
 
-    if OWNER:
+    if OWNER == 0:
         bot = Bot(TOKEN)
         bot.send_message(OWNER, message)
 
@@ -57,17 +57,18 @@ def start(update, _):
         return -1
 
     name = text[1]
-    welcome_message = f"Hi {name} 😀" \
-                      "Before we embark on Phase 0 please fill up this Intellectual Property Agreement Google Form as " \
-                      "our resources are private and confidential. 😀 https://forms.gle/3JXob9Qf9SEwPmQN6" \
-                      "I will also require your gmail thank you!"
+    welcome_message = f"Hi {name} 😀 \n\n" \
+                      "Before we embark on Phase 0 please fill up this Intellectual Property Agreement Google Form " \
+                      "as our resources are private and confidential. 😀 https://forms.gle/3JXob9Qf9SEwPmQN6" \
+                      "\n\nI will also require your gmail thank you!"
     update.message.reply_text(welcome_message)
 
 
 @typing
 def stage1(update, _):
     log(update, "/stage1")
-    stage1_message = "While waiting for the Agreement, let's proceed to level 1! 😀 Here are the details for Level 1: " \
+    stage1_message = "While waiting for the Agreement, let's proceed to level 1! 😀 \n\n" \
+                     "Here are the details for *Level 1*: " \
                      "Overview of advisory 1. Our Services & Sample Consultation Video -"
     update.message.reply_text(stage1_message)
 
@@ -75,23 +76,29 @@ def stage1(update, _):
 @typing
 def stage2(update, _):
     log(update, "/stage2")
-    stage2_message = "Hey @(name) lets go to level 2!! 🥳 Level 2 Basics of Financial Planning Enjoy watching all the " \
-                     "videos to have a bird's eye view on what financial planning is all about, so that you " \
-                     "understand the value advisors provide for our clients, and have an idea on how you can provide " \
-                     "this value for your friends as well."
-    update.message.reply_text(stage2_message)
+    stage2_message = "Hey let's go to level 2!! 🥳 \n\n" \
+                     "*Level 2*\n" \
+                     "*Basics of Financial Planning*" \
+                     "\nEnjoy watching all the videos to have a bird's eye view on what financial planning is all " \
+                     "about, so that you understand the value advisors provide for our clients, and have an idea on " \
+                     "how you can provide this value for your friends as well."
+    update.message.reply_text(stage2_message, parse_mode=ParseMode.MARKDOWN)
 
 
 @typing
 def stage3(update, _):
     log(update, "/stage3")
-    stage3_message = "Let's head to the final stage of your assessment! @(name) 🥳Level 3 AMRE Time to get out of " \
+    stage3_message = "Let's head to the final stage of your assessment! 🥳 \n\n" \
+                     "*Level 3* \n\n" \
+                     "*AMRE* \n\n" \
+                     "Time to get out of " \
                      "your own comfort zone. This process is for you to reach out to people around you, " \
                      "get their opinions and thoughts on advisors and what their ideal advisor should be. This will " \
-                     "also build your resistance against rejections (if you get any). Fill up your database first, " \
+                     "also build your resistance against rejections (if you get any). \n\n" \
+                     "Fill up your database first, " \
                      "from your contacts, listing them down does not mean you will be reaching out to them, " \
                      "this exercise simply gives you a more macro view of your battleground, which will come in " \
-                     "handy for the other Levels ahead. "
+                     "handy for the other Levels ahead."
     update.message.reply_text(stage3_message)
 
 

@@ -1,1 +1,1 @@
-# emmabot
+# EmmaBot
