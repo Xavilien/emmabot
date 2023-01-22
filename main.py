@@ -1,16 +1,18 @@
-from flask import Flask, request
-from telegram import ChatAction, ParseMode, Bot, Update
 import os
-from functools import wraps
 import re
 from datetime import timedelta, date
+from functools import wraps
 
-VERSION = 1.0
-VERSION_INTRO = "Working MVP"
+from flask import Flask, request
+from telegram import ChatAction, ParseMode, Bot, Update
+
+VERSION = 2.0
+VERSION_INTRO = "Added authorisation"
 
 TOKEN = os.environ.get('EMMA_BOT_TOKEN')
 PORT = int(os.environ.get('PORT', 5000))
-OWNER = os.environ.get('TELEGRAM_ID', None)
+ADMINS = os.environ.get('ADMINS').split('_')
+OWNER = ADMINS[0]
 
 app = Flask(__name__)
 bot = Bot(TOKEN)
@@ -27,10 +29,11 @@ def typing(func):
     return command_func
 
 
-# Updates owner when someone runs a command
-def log(update, command):
+def log(update):
+    """Updates owner when someone runs a command"""
     username = update.message.from_user.username
     userid = update.message.from_user.id
+    command = update.message.text
 
     message = f"@{username} ({userid}) ran {command}"
 
@@ -40,13 +43,13 @@ def log(update, command):
 
 @typing
 def version(update):
+    """Sends bot version to keep track of changes"""
     bot.send_message(update.message.chat.id, f"*Version {VERSION}*\n{VERSION_INTRO}", parse_mode=ParseMode.MARKDOWN)
-    return -1
 
 
 @typing
 def start(update):
-    log(update, "/start")
+    # Get the name of the person after the /start command
     text = update.message.text.split()
     if len(text) < 2:
         update.message.reply_text("Please enter a name.")
@@ -64,13 +67,16 @@ def start(update):
 @typing
 def stages(update, stage: str, deadline: int):
     try:
-        log(update, f"/{stage}")
+        # Retrieve the relevant message
         with open(f"text/{stage}.md") as file:
             message = file.read()
 
+        # Add in the due date by replacing the placeholder text
         due_date = (date.today() + timedelta(deadline)).strftime("%d/%m/%Y")
         message = re.sub("<insert date>", str(due_date), message)
+
         bot.send_message(update.message.chat.id, message, parse_mode=ParseMode.MARKDOWN)
+
     except Exception as e:
         bot.send_message(update.message.chat.id, str(e))
 
@@ -90,16 +96,21 @@ def stage3(update):
 @app.route(f'/{TOKEN}', methods=['POST'])
 def respond():
     update = Update.de_json(request.get_json(force=True), bot)
-    text = update.message.text
+    log(update)  # sends a message to my chat everytime someone interacts with the bot
 
-    command = re.findall("^/(\\w+)", text)
+    # check if the user running the command is an admin
+    if str(update.message.from_user.id) not in ADMINS:
+        bot.send_message(update.message.chat.id, "Sorry, not authorised.")
+        return "Unauthorised"
 
+    # Run the command if it exists
+    command = re.findall("^/(\\w+)", update.message.text)
     if len(command) > 0:
         command = f"{command[0]}(update)"
         try:
             eval(command)
         except NameError:
-            pass
+            return "Command not found"
 
     return "Success"
 
@@ -108,7 +119,7 @@ def respond():
 def set_webhook():
     url = "https://8xotrk.deta.dev/" + TOKEN
     bot.set_webhook(url)
-    return "Webhook success"
+    return "Success"
 
 
 if __name__ == '__main__':
