@@ -4,8 +4,8 @@ import os
 from functools import wraps
 import re
 
-VERSION = 0.0
-VERSION_INTRO = "First Draft"
+VERSION = 1.0
+VERSION_INTRO = "Working MVP"
 
 TOKEN = os.environ.get('EMMA_BOT_TOKEN')
 PORT = int(os.environ.get('PORT', 5000))
@@ -26,15 +26,7 @@ def typing(func):
     return command_func
 
 
-# /version
-@typing
-def version(update, _):
-    update.message.reply_text(f"<b>Version {VERSION}</b>\n"
-                              f"{VERSION_INTRO}", parse_mode=ParseMode.HTML)
-    return -1
-
-
-# Updates owner when someone runs a command. Stores the logs temporarily which can be accessed by /logs
+# Updates owner when someone runs a command
 def log(update, command):
     username = update.message.from_user.username
     userid = update.message.from_user.id
@@ -43,6 +35,12 @@ def log(update, command):
 
     if OWNER:
         bot.send_message(OWNER, message)
+
+
+@typing
+def version(update):
+    bot.send_message(update.message.chat.id, f"*Version {VERSION}*\n{VERSION_INTRO}", parse_mode=ParseMode.MARKDOWN)
+    return -1
 
 
 @typing
@@ -59,7 +57,7 @@ def start(update):
                       "as our resources are private and confidential. 😀 https://forms.gle/3JXob9Qf9SEwPmQN6" \
                       "\n\nI will also require your gmail thank you!"
 
-    bot.send_message(update.message.chat.id, welcome_message)
+    bot.send_message(update.message.chat.id, welcome_message, parse_mode=ParseMode.MARKDOWN)
 
 
 @typing
@@ -68,7 +66,7 @@ def stage1(update):
     stage1_message = "While waiting for the Agreement, let's proceed to level 1! 😀 \n\n" \
                      "Here are the details for *Level 1*: " \
                      "Overview of advisory 1. Our Services & Sample Consultation Video -"
-    bot.send_message(update.message.chat.id, stage1_message)
+    bot.send_message(update.message.chat.id, stage1_message, parse_mode=ParseMode.MARKDOWN)
 
 
 @typing
@@ -100,11 +98,6 @@ def stage3(update):
     bot.send_message(update.message.chat.id, stage3_message, parse_mode=ParseMode.MARKDOWN)
 
 
-@app.route('/')
-def index():
-    return "Index"
-
-
 @app.route(f'/{TOKEN}', methods=['POST'])
 def respond():
     update = Update.de_json(request.get_json(force=True), bot)
@@ -116,13 +109,13 @@ def respond():
         command = f"{command[0]}(update)"
         try:
             eval(command)
-        except NameError as e:
+        except NameError:
             pass
 
     return "Success"
 
 
-@app.route('/setwebhook', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def set_webhook():
     url = "https://8xotrk.deta.dev/" + TOKEN
     bot.set_webhook(url)
