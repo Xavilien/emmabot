@@ -1,27 +1,27 @@
-from telegram.ext import Updater, CommandHandler, ConversationHandler, CallbackQueryHandler, MessageHandler, Filters
-from telegram import ChatAction, InlineKeyboardMarkup, InlineKeyboardButton, Bot
-from telegram import ParseMode
+from flask import Flask, request
+from telegram import ChatAction, ParseMode, Bot, Update
 import os
 from functools import wraps
+import re
+
+VERSION = 0.0
+VERSION_INTRO = "First Draft"
 
 TOKEN = os.environ.get('EMMA_BOT_TOKEN')
 PORT = int(os.environ.get('PORT', 5000))
 OWNER = os.environ.get('TELEGRAM_ID', None)
 
-VERSION = 0.0
-VERSION_INTRO = "First Draft"
-
-chats = {}
-logs = []
+app = Flask(__name__)
+bot = Bot(TOKEN)
 
 
 def typing(func):
     """Sends typing action while processing func command."""
 
     @wraps(func)
-    def command_func(update, context, *args, **kwargs):
-        context.bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
-        return func(update, context, *args, **kwargs)
+    def command_func(update, *args, **kwargs):
+        bot.send_chat_action(chat_id=update.effective_message.chat_id, action=ChatAction.TYPING)
+        return func(update, *args, **kwargs)
 
     return command_func
 
@@ -40,16 +40,13 @@ def log(update, command):
     userid = update.message.from_user.id
 
     message = f"@{username} ({userid}) ran {command}"
-    logs.append(message + "\n")
 
-    if OWNER == 0:
-        bot = Bot(TOKEN)
+    if OWNER:
         bot.send_message(OWNER, message)
 
 
-# Bot replies "Hello World!" when the /start command is activated for the Bot
 @typing
-def start(update, _):
+def start(update):
     log(update, "/start")
     text = update.message.text.split()
     if len(text) < 2:
@@ -61,20 +58,21 @@ def start(update, _):
                       "Before we embark on Phase 0 please fill up this Intellectual Property Agreement Google Form " \
                       "as our resources are private and confidential. 😀 https://forms.gle/3JXob9Qf9SEwPmQN6" \
                       "\n\nI will also require your gmail thank you!"
-    update.message.reply_text(welcome_message)
+
+    bot.send_message(update.message.chat.id, welcome_message)
 
 
 @typing
-def stage1(update, _):
+def stage1(update):
     log(update, "/stage1")
     stage1_message = "While waiting for the Agreement, let's proceed to level 1! 😀 \n\n" \
                      "Here are the details for *Level 1*: " \
                      "Overview of advisory 1. Our Services & Sample Consultation Video -"
-    update.message.reply_text(stage1_message)
+    bot.send_message(update.message.chat.id, stage1_message)
 
 
 @typing
-def stage2(update, _):
+def stage2(update):
     log(update, "/stage2")
     stage2_message = "Hey let's go to level 2!! 🥳 \n\n" \
                      "*Level 2*\n" \
@@ -82,11 +80,11 @@ def stage2(update, _):
                      "\nEnjoy watching all the videos to have a bird's eye view on what financial planning is all " \
                      "about, so that you understand the value advisors provide for our clients, and have an idea on " \
                      "how you can provide this value for your friends as well."
-    update.message.reply_text(stage2_message, parse_mode=ParseMode.MARKDOWN)
+    bot.send_message(update.message.chat.id, stage2_message, parse_mode=ParseMode.MARKDOWN)
 
 
 @typing
-def stage3(update, _):
+def stage3(update):
     log(update, "/stage3")
     stage3_message = "Let's head to the final stage of your assessment! 🥳 \n\n" \
                      "*Level 3* \n\n" \
@@ -99,52 +97,37 @@ def stage3(update, _):
                      "from your contacts, listing them down does not mean you will be reaching out to them, " \
                      "this exercise simply gives you a more macro view of your battleground, which will come in " \
                      "handy for the other Levels ahead."
-    update.message.reply_text(stage3_message)
+    bot.send_message(update.message.chat.id, stage3_message, parse_mode=ParseMode.MARKDOWN)
 
 
-@typing
-# /cancel
-def cancel(update, _):
-    log(update, "/cancel")
-    update.message.reply_text("Operation cancelled.")
-    return -1
+@app.route('/')
+def index():
+    return "Index"
 
 
-# def get_conversation_handler():
-#     mgr_filter = Filters.regex(r"(\d+ \d+\n\d+ \d+)")
-#
-#     conversation_handler = ConversationHandler(
-#         entry_points=[CommandHandler('distance', distance)],
-#         states={
-#             "distance": [MessageHandler(mgr_filter, distance)],
-#         },
-#         fallbacks=[CommandHandler('cancel', cancel),
-#                    CommandHandler('distance', distance)],
-#
-#     )
-#
-#     return conversation_handler
+@app.route(f'/{TOKEN}', methods=['POST'])
+def respond():
+    update = Update.de_json(request.get_json(force=True), bot)
+    text = update.message.text
+
+    command = re.findall("^/(\\w+)", text)
+
+    if len(command) > 0:
+        command = f"{command[0]}(update)"
+        try:
+            eval(command)
+        except NameError as e:
+            pass
+
+    return "Success"
 
 
-def main():
-    updater = Updater(TOKEN)
-    dp = updater.dispatcher  # Registers handlers (commands etc)
-
-    # dp.add_handler(get_conversation_handler())
-    dp.add_handler(CommandHandler("version", version))  # To keep track of bot updates
-    dp.add_handler(CommandHandler("start", start))  # Run start function when /start command is used
-    dp.add_handler(CommandHandler("stage1", stage1))
-    dp.add_handler(CommandHandler("stage2", stage2))
-    dp.add_handler(CommandHandler("stage3", stage3))
-
-    print("Starting bot...")
-    updater.start_polling()  # Start the bot
-
-    url = "https://pathprofile.herokuapp.com/" + TOKEN
-    updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN, webhook_url=url)
-
-    updater.idle()  # Not exactly sure why this has to be here to be honest
+@app.route('/setwebhook', methods=['GET', 'POST'])
+def set_webhook():
+    url = "https://8xotrk.deta.dev/" + TOKEN
+    bot.set_webhook(url)
+    return "Webhook success"
 
 
 if __name__ == '__main__':
-    main()
+    app.run()
