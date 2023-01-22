@@ -6,8 +6,8 @@ from functools import wraps
 from flask import Flask, request
 from telegram import ChatAction, ParseMode, Bot, Update
 
-VERSION = 2.0
-VERSION_INTRO = "Added authorisation"
+VERSION = 2.3
+VERSION_INTRO = "Fixed a super pesky bug that prevented the bot from working when added to groups"
 
 TOKEN = os.environ.get('EMMA_BOT_TOKEN')
 PORT = int(os.environ.get('PORT', 5000))
@@ -104,7 +104,7 @@ def respond():
         return "Unauthorised"
 
     # Run the command if it exists
-    command = re.findall("^/(\\w+)", update.message.text)
+    command = re.findall("^/(\\w+)", str(update.message.text))
     if len(command) > 0:
         command = f"{command[0]}(update)"
         try:
