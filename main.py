@@ -3,6 +3,7 @@ from telegram import ChatAction, ParseMode, Bot, Update
 import os
 from functools import wraps
 import re
+from datetime import timedelta, date
 
 VERSION = 1.0
 VERSION_INTRO = "Working MVP"
@@ -61,41 +62,29 @@ def start(update):
 
 
 @typing
+def stages(update, stage: str, deadline: int):
+    try:
+        log(update, f"/{stage}")
+        with open(f"text/{stage}.md") as file:
+            message = file.read()
+
+        due_date = (date.today() + timedelta(deadline)).strftime("%d/%m/%Y")
+        message = re.sub("<insert date>", str(due_date), message)
+        bot.send_message(update.message.chat.id, message, parse_mode=ParseMode.MARKDOWN)
+    except Exception as e:
+        bot.send_message(update.message.chat.id, str(e))
+
+
 def stage1(update):
-    log(update, "/stage1")
-    stage1_message = "While waiting for the Agreement, let's proceed to level 1! 😀 \n\n" \
-                     "Here are the details for *Level 1*: " \
-                     "Overview of advisory 1. Our Services & Sample Consultation Video -"
-    bot.send_message(update.message.chat.id, stage1_message, parse_mode=ParseMode.MARKDOWN)
+    stages(update, "stage1", 3)
 
 
-@typing
 def stage2(update):
-    log(update, "/stage2")
-    stage2_message = "Hey let's go to level 2!! 🥳 \n\n" \
-                     "*Level 2*\n" \
-                     "*Basics of Financial Planning*" \
-                     "\nEnjoy watching all the videos to have a bird's eye view on what financial planning is all " \
-                     "about, so that you understand the value advisors provide for our clients, and have an idea on " \
-                     "how you can provide this value for your friends as well."
-    bot.send_message(update.message.chat.id, stage2_message, parse_mode=ParseMode.MARKDOWN)
+    stages(update, "stage2", 3)
 
 
-@typing
 def stage3(update):
-    log(update, "/stage3")
-    stage3_message = "Let's head to the final stage of your assessment! 🥳 \n\n" \
-                     "*Level 3* \n\n" \
-                     "*AMRE* \n\n" \
-                     "Time to get out of " \
-                     "your own comfort zone. This process is for you to reach out to people around you, " \
-                     "get their opinions and thoughts on advisors and what their ideal advisor should be. This will " \
-                     "also build your resistance against rejections (if you get any). \n\n" \
-                     "Fill up your database first, " \
-                     "from your contacts, listing them down does not mean you will be reaching out to them, " \
-                     "this exercise simply gives you a more macro view of your battleground, which will come in " \
-                     "handy for the other Levels ahead."
-    bot.send_message(update.message.chat.id, stage3_message, parse_mode=ParseMode.MARKDOWN)
+    stages(update, "stage3", 10)
 
 
 @app.route(f'/{TOKEN}', methods=['POST'])
