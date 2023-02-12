@@ -1,4 +1,4 @@
-Let's head to the final stage of your assessment! 🥳
+Hi <name>! Let's head to the final stage of your assessment! 🥳
 
 *Level 3:*
 *AMRE*
@@ -7,9 +7,10 @@ Time to get out of your own comfort zone. This process is for you to reach out t
 Fill up your database first, from your contacts, listing them down does not mean you will be reaching out to them, this exercise simply gives you a more macro view of your battleground, which will come in handy for the other Levels ahead.
 
 Make a COPY and complete 15 AMRE before you can progress to the next Level. 
+
 Send them to this chat in a zip file once you’re done.
 
-Highly focused and disciplined advisors will only need: 10 days to complete this. But of course should you need a time extension, do let us know! 
+Highly focused and disciplined advisors will only need: 10 days to complete this.
 
 Looking forward to your AMRE by *<insert date> 2359H* 😊
 
