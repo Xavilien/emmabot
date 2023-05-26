@@ -11,3 +11,4 @@ tornado==6.1
 tzdata==2022.7
 tzlocal==4.2
 Flask~=2.2.2
+deta~=1.1.0
